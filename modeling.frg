@@ -98,8 +98,8 @@ pred move[t1, t2: TIME, playing, receiving: Player, summand: Int] {
 
 
 pred helperMove[player, receiving : Player, t1, t2: TIME] {
-    //you can move on dead hands!!!!!!!!!!!!
     {
+        receiving.leftFingers[t1] != 0
         player.leftFingers[t2] = player.leftFingers[t1]
         player.rightFingers[t2] = player.rightFingers[t1]
         receiving.leftFingers[t2] = fingerSum[receiving.leftFingers[t1], player.leftFingers[t1]]
@@ -107,6 +107,7 @@ pred helperMove[player, receiving : Player, t1, t2: TIME] {
     }
     or
     {
+        receiving.rightFingers[t1] != 0
         player.leftFingers[t2] = player.leftFingers[t1]
         player.rightFingers[t2] = player.rightFingers[t1]
         receiving.leftFingers[t2] = receiving.leftFingers[t1]
@@ -114,6 +115,7 @@ pred helperMove[player, receiving : Player, t1, t2: TIME] {
     }
     or
     {
+        receiving.leftFingers[t1] != 0 
         player.leftFingers[t2] = player.leftFingers[t1]
         player.rightFingers[t2] = player.rightFingers[t1]
         receiving.leftFingers[t2] = fingerSum[receiving.leftFingers[t1], player.rightFingers[t1]]
@@ -121,6 +123,7 @@ pred helperMove[player, receiving : Player, t1, t2: TIME] {
     }
     or
     {
+        receiving.rightFingers[t1] != 0
         player.leftFingers[t2] = player.leftFingers[t1]
         player.rightFingers[t2] = player.rightFingers[t1]
         receiving.leftFingers[t2] = receiving.leftFingers[t1]
@@ -139,13 +142,16 @@ fun fingerSum[int1, int2: Int]: one Int {
     (add[int1, int2] > 4 or add[int1, int2] < 0) implies 0 else add[int1, int2]
 }
 
+//if a game ended, everything should stay the same
 pred gameStillOver[t1: TIME] {
     some p: Player | losing[t1, p]
 
-    PlayerOne.leftFingers[t1] = PlayerOne.leftFingers[t1.next]
-    PlayerOne.rightFingers[t1] = PlayerOne.rightFingers[t1.next]
-    PlayerTwo.leftFingers[t1] = PlayerTwo.leftFingers[t1.next]
-    PlayerTwo.rightFingers[t1] = PlayerTwo.rightFingers[t1.next]
+    nothingMoved[t1, t1.next]
+
+    // PlayerOne.leftFingers[t1] = PlayerOne.leftFingers[t1.next]
+    // PlayerOne.rightFingers[t1] = PlayerOne.rightFingers[t1.next]
+    // PlayerTwo.leftFingers[t1] = PlayerTwo.leftFingers[t1.next]
+    // PlayerTwo.rightFingers[t1] = PlayerTwo.rightFingers[t1.next]
 }
 
 pred traces {
@@ -164,4 +170,4 @@ pred traces {
 
 }
 
-run {traces} for 5 TIME for {next is linear}
+run {traces} for 7 TIME for {next is linear}
