@@ -31,7 +31,11 @@ pred enoughFingers {
         p.rightFingers[t] > 4
     }
 }
-//no infinite loops, but ends after 10 times any
+//no infinite loops, but ends after 10 times anyway
+
+pred noLoops[t: TIME]{
+    some t.next => t.next != t
+}
 
 //ups the turn counter
 pred turntaking[t: TIME] {
@@ -146,12 +150,19 @@ fun fingerSum[int1, int2: Int]: one Int {
 pred gameStillOver[t1: TIME] {
     some p: Player | losing[t1, p]
 
-    nothingMoved[t1, t1.next]
+    some t1.next => nothingMoved[t1, t1.next]
 
     // PlayerOne.leftFingers[t1] = PlayerOne.leftFingers[t1.next]
     // PlayerOne.rightFingers[t1] = PlayerOne.rightFingers[t1.next]
     // PlayerTwo.leftFingers[t1] = PlayerTwo.leftFingers[t1.next]
     // PlayerTwo.rightFingers[t1] = PlayerTwo.rightFingers[t1.next]
+}
+
+pred someoneLoses {
+    some t: TIME, p: Player | {
+        losing[t, p]
+        some t.next
+    }
 }
 
 pred traces {
@@ -170,4 +181,6 @@ pred traces {
 
 }
 
-run {traces} for 7 TIME for {next is linear}
+run {traces} for 9 TIME for {next is linear}
+
+//run {traces someoneLoses} for 9 TIME for {next is linear}
