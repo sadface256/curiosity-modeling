@@ -106,6 +106,7 @@ pred turnExists {
     }
 }
 
+//if the turn has changed, it should be the same person twice
 pred sameTurn[t1, t2 : TIME] {
     some t1.turn and some t2.turn
     t1.next = t2
@@ -122,7 +123,7 @@ test suite for alwaysBalanced {
     assert whoseTurn is necessary for balancedTurns
     assert all t: TIME | noStealingTurns is necessary for balancedTurns
     assert turnExists is sufficient for alwaysBalanced
-
+    // example balanced state
     example basicBalance is {alwaysBalanced} for {
         PlayerOne = `PlayerOne0
         PlayerTwo = `PlayerTwo0
@@ -224,6 +225,7 @@ test suite for move {
         `PlayerTwo0.rightFingers = `time0 -> 1 + `time1 -> 2
     }
 
+//splitting is something only big Move can do when things are even
     example exampleSplitting is {some t1, t2 : TIME, p1, p2: Player, num: Int | move[t1, t2, p1, p2, num]} for {
         PlayerOne = `PlayerOne0
         PlayerTwo = `PlayerTwo0
@@ -235,6 +237,7 @@ test suite for move {
         `PlayerTwo0.rightFingers = `time0 -> 1 + `time1 -> 2
     }
 
+//but only when even
     example badSplitting is {some t1, t2 : TIME, p1, p2: Player, num: Int | not move[t1, t2, p1, p2, num]} for {
         PlayerOne = `PlayerOne0
         PlayerTwo = `PlayerTwo0
@@ -257,11 +260,13 @@ pred stillLosing[t : TIME] {
     some t.next => {some p : Player | losing[t.next, p]}
 }
 
+//equivalent to loss
 pred zerosum[t: TIME, p: Player] {
     add[p.leftFingers[t], p.rightFingers[t]] = 0
 }
 
 test suite for losing {
+    //if we're losing your hands should be 0, and the next round you should stay losing
     assert all t: TIME, p: Player | zerosum[t, p] is necessary for losing[t, p]
     assert all t: TIME | stillLosing[t] is necessary for gameStillOver[t]
     example oneLoss is {some t1 : TIME, p: Player | losing[t1, p]} for {
@@ -287,10 +292,12 @@ test suite for losing {
     }
 }
 
+//the next state stayed the same
 pred nothingMovedTwoStates[t: TIME] {
     some t.next => nothingMoved[t, t.next]
 }
 
+//another way to check the states stayed the same
 pred sumTheSame[t, t2 : TIME] {
     add[PlayerOne.rightFingers[t], PlayerOne.leftFingers[t]] = add[PlayerOne.rightFingers[t2], PlayerOne.leftFingers[t2]]
     add[PlayerTwo.rightFingers[t], PlayerTwo.leftFingers[t]] = add[PlayerTwo.rightFingers[t2], PlayerTwo.leftFingers[t2]]
@@ -314,6 +321,7 @@ test suite for nothingMoved {
         `PlayerTwo0.rightFingers = `time0 -> 0 + `time1 -> 0
     }
 
+    //if a hand resurrects something changed
     example oneHandLives is {some t1, t2 : TIME | not nothingMoved[t1, t2]} for {
         PlayerOne = `PlayerOne0
         PlayerTwo = `PlayerTwo0
