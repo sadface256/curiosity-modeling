@@ -31,11 +31,6 @@ pred enoughFingers {
         p.rightFingers[t] > 4
     }
 }
-//no infinite loops, but ends after 10 times anyway
-
-pred noLoops[t: TIME]{
-    some t.next => t.next != t
-}
 
 //ups the turn counter
 pred turntaking[t: TIME] {
@@ -51,6 +46,7 @@ pred twoturn[t: TIME] {
     remainder[t.turn, 2] = 1
 }
 
+//balanced ensures it's always someone's turn
 pred balanced[t: TIME] {
     oneturn[t] or twoturn[t]
 }
@@ -102,6 +98,9 @@ pred move[t1, t2: TIME, playing, receiving: Player, summand: Int] {
 
 
 pred helperMove[player, receiving : Player, t1, t2: TIME] {
+    //each of these is a permutation of one of my hands hitting one of your hands
+    //can't hit a dead hand (that helps your opponent)
+    //i hit one of your hands and everything else should stay the same
     {
         receiving.leftFingers[t1] != 0
         player.leftFingers[t2] = player.leftFingers[t1]
@@ -135,6 +134,7 @@ pred helperMove[player, receiving : Player, t1, t2: TIME] {
     }
 }
 
+//for when we're losing, nothing should change
 pred nothingMoved[t1, t2: TIME] {
     PlayerOne.leftFingers[t2] = PlayerOne.leftFingers[t1]
     PlayerOne.rightFingers[t2] = PlayerOne.rightFingers[t1]
@@ -142,6 +142,7 @@ pred nothingMoved[t1, t2: TIME] {
     PlayerTwo.rightFingers[t2] = PlayerTwo.rightFingers[t1]
 }
 
+//to make sure dead hands work, if the sum of the fingers is more than 4 we consider it dead (0)
 fun fingerSum[int1, int2: Int]: one Int {
     (add[int1, int2] > 4 or add[int1, int2] < 0) implies 0 else add[int1, int2]
 }
@@ -151,11 +152,6 @@ pred gameStillOver[t1: TIME] {
     some p: Player | losing[t1, p]
 
     some t1.next => nothingMoved[t1, t1.next]
-
-    // PlayerOne.leftFingers[t1] = PlayerOne.leftFingers[t1.next]
-    // PlayerOne.rightFingers[t1] = PlayerOne.rightFingers[t1.next]
-    // PlayerTwo.leftFingers[t1] = PlayerTwo.leftFingers[t1.next]
-    // PlayerTwo.rightFingers[t1] = PlayerTwo.rightFingers[t1.next]
 }
 
 pred someoneLoses {
@@ -166,6 +162,7 @@ pred someoneLoses {
 }
 
 pred traces {
+    //fingers 0<x<4, always a turn
     enoughFingers
     alwaysBalanced
 
@@ -174,6 +171,7 @@ pred traces {
         no t: TIME | t.next = firstState
         no lastState.next
         all t: TIME | t != lastState implies {
+            //we up the turn counter and then either move or not, depending on if were losing
             turntaking[t]
             (some p, r: Player, s: Int | move[t, t.next, p, r, s]) or gameStillOver[t]
         }
